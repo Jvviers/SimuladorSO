@@ -1,16 +1,92 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
-  <title>Simulador SO</title>
+  <title>Simulador de Procesos SO</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #276ef1;
+      color: white;
+      padding: 12px;
+      text-align: center;
+    }
+    #controls {
+      padding: 16px;
+    }
+    #controls form div {
+      margin-bottom: 8px;
+    }
+    #controls label {
+      display: inline-block;
+      width: 160px;
+    }
+    #controls input {
+      width: 200px;
+      padding: 4px;
+    }
+    #controls button {
+      padding: 6px 12px;
+      background: #28a745;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    #controls button:hover {
+      background: #218838;
+    }
+    #process-list {
+      margin-top: 12px;
+    }
+    #canvas, #charts {
+      border: 1px solid #ccc;
+      margin: 16px;
+      height: 240px;
+    }
+  </style>
 </head>
+
 <body>
-    <h1>El HTML ya carga</h1>
-    <div id="controls"></div>
-    <div id="canvas"></div>
-    <div id="charts"></div>
-    <script src="../src/UI/controls.js"></script>
-    <script src="../src/renderer/canvas.js"></script>
-    <script src="../src/renderer/charts.js"></script>
+  <header>
+    <h1>Simulador de Procesos SO</h1>
+  </header>
+
+  <div id="controls">
+    <form id="process-form">
+      <div>
+        <label for="name">Nombre del Proceso:</label>
+        <input type="text" id="name" placeholder="P1" required>
+      </div>
+      <div>
+        <label for="arrival">Tiempo de llegada (ms):</label>
+        <input type="number" id="arrival" min="0" placeholder="0" required>
+      </div>
+      <div>
+        <label for="burst">CPU Burst (ms):</label>
+        <input type="number" id="burst" min="1" placeholder="50" required>
+      </div>
+      <div>
+        <label for="memory">Tamaño en Memoria (KB):</label>
+        <input type="number" id="memory" min="1" placeholder="128" required>
+      </div>
+      <button type="submit">Añadir Proceso</button>
+    </form>
+
+    <ul id="process-list"></ul>
+  </div>
+
+  <div id="canvas"></div>
+  <div id="charts"></div>
+
+  <!-- Scripts al final para garantizar que el DOM esté cargado -->
+  <script src="../src/UI/controls.js"></script>
+  <script src="../src/renderer/canvas.js"></script>
+  <script src="../src/renderer/charts.js"></script>
 </body>
+
 </html>
