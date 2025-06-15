@@ -1,49 +1,115 @@
 // src/ui/controls.js
 import { Proceso } from '../core/process.js';
 
+//
+// Configuración inicial del simulador
+//
 window.simulator = window.simulator || {};
 window.simulator.procesos = window.simulator.procesos || [];
+window.simulator.config = window.simulator.config || {
+  algoritmo: 'SJF',   // por defecto
+  quantum: null       // sólo válido cuando algoritmo === 'RR'
+};
 
 let nextPID = 1;
+const DEFAULT_QUANTUM = 5;
 
 document.addEventListener('DOMContentLoaded', () => {
+  //
+  // 1) Formulario de creación de procesos
+  //
   const form = document.getElementById('process-form');
-
   form.addEventListener('submit', e => {
     e.preventDefault();
-
     const nombre  = document.getElementById('name').value.trim();
-    const arrival = parseInt(document.getElementById('arrival').value, 10);
-    const burst   = parseInt(document.getElementById('burst').value, 10);
-    const memory  = parseInt(document.getElementById('memory').value, 10);
+    const arrival = +document.getElementById('arrival').value;
+    const burst   = +document.getElementById('burst').value;
+    const memory  = +document.getElementById('memory').value;
 
     if (!nombre || [arrival, burst, memory].some(v => isNaN(v) || v < 0)) {
       return alert('Completa todos los campos con valores válidos.');
     }
 
-    // Crear y almacenar el proceso
     const proceso = new Proceso(nextPID++, nombre, arrival, burst, memory);
     window.simulator.procesos.push(proceso);
 
-    // Actualizar la UI
     renderProcessList();
-
     form.reset();
+  });
+
+  //
+  // 2) Selector de algoritmo y campo de quantum
+  //
+  const selectAlgo   = document.getElementById('algo');
+  const inputQuantum = document.getElementById('quantum');
+  const labelQuantum = document.getElementById('label-quantum');
+
+  selectAlgo.addEventListener('change', () => {
+    const isRR = selectAlgo.value === 'RR';
+
+    // Mostrar u ocultar el campo de quantum
+    labelQuantum.style.display   = isRR ? 'inline-block' : 'none';
+    inputQuantum.style.display   = isRR ? 'inline-block' : 'none';
+
+    // Habilitar o deshabilitar el input
+    inputQuantum.disabled = !isRR;
+
+    if (isRR) {
+      // Si no hay quantum previo, ponemos el por defecto
+      if (!window.simulator.config.quantum) {
+        window.simulator.config.quantum = DEFAULT_QUANTUM;
+      }
+      inputQuantum.value = window.simulator.config.quantum;
+    } else {
+      // Al cambiar a SJF, limpiamos el valor
+      window.simulator.config.quantum = null;
+      inputQuantum.value = '';
+    }
+
+    // Guardamos el algoritmo
+    window.simulator.config.algoritmo = selectAlgo.value;
+  });
+
+  // Inicializamos la visibilidad según el algoritmo por defecto
+  selectAlgo.dispatchEvent(new Event('change'));
+
+  //
+  // 3) Botones Iniciar / Detener simulación
+  //
+  const startBtn = document.getElementById('start-btn');
+  const stopBtn  = document.getElementById('stop-btn');
+
+  startBtn.addEventListener('click', () => {
+    const alg = window.simulator.config.algoritmo;
+    const q   = parseInt(inputQuantum.value, 10);
+    if (alg === 'RR' && (isNaN(q) || q < 1)) {
+      return alert('Ingresa un quantum válido (>0).');
+    }
+    window.simulator.config.quantum = q;
+    console.log(`Iniciando simulación con algoritmo=${alg}, quantum=${q}`);
+    // Aquí: window.simulator.startSimulation();
+  });
+
+  stopBtn.addEventListener('click', () => {
+    console.log('Deteniendo simulación');
+    // Aquí: window.simulator.stopSimulation();
   });
 });
 
-/** Función muy simple para mostrar la lista en pantalla */
+//
+// Función para mostrar la lista de procesos en la UI
+//
 function renderProcessList() {
-  let container = document.getElementById('process-list');
-  if (!container) {
-    container = document.createElement('ul');
-    container.id = 'process-list';
-    document.getElementById('controls').appendChild(container);
+  let ul = document.getElementById('process-list');
+  if (!ul) {
+    ul = document.createElement('ul');
+    ul.id = 'process-list';
+    document.getElementById('controls').appendChild(ul);
   }
-  container.innerHTML = '';  
-  window.simulator.procesos.forEach(p => {
+  ul.innerHTML = '';
+  for (const p of window.simulator.procesos) {
     const li = document.createElement('li');
-    li.textContent = `${p.nombre} (PID=${p.id}): llegada=${p.llegada}, burst=${p.burst}, mem=${p.memoria}`;
-    container.appendChild(li);
-  });
+    li.textContent = `${p.nombre} (PID=${p.id}): llegada=${p.llegada}ms, burst=${p.burst}ms, mem=${p.memoria}KB`;
+    ul.appendChild(li);
+  }
 }
