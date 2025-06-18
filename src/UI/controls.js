@@ -1,20 +1,22 @@
 // src/ui/controls.js
 import { Proceso } from '../core/process.js';
-import { drawMemory } from '../renderer/canvas.js';   // ← importamos drawMemory
-
+import { drawMemory } from '../renderer/canvas.js';
+import { Planificador } from '../core/scheduler.js';
+import { Memoria } from '../core/memory.js';
 //
 // Configuración inicial del simulador
 //
 window.simulator = window.simulator || {};
 window.simulator.procesos = window.simulator.procesos || [];
-window.simulator.memoria   = window.simulator.memoria   || null;  // la inyectarás desde el init
+window.simulator.memoria = window.simulator.memoria || null;
 window.simulator.config = window.simulator.config || {
   algoritmo: 'SJF',
-  quantum:   null
+  quantum: null
 };
 
 let nextPID = 1;
 const DEFAULT_QUANTUM = 5;
+const TOTAL_KB = 2 * 1024 * 1024;
 
 document.addEventListener('DOMContentLoaded', () => {
   //
@@ -23,10 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('process-form');
   form.addEventListener('submit', e => {
     e.preventDefault();
-    const nombre  = document.getElementById('name').value.trim();
+    const nombre = document.getElementById('name').value.trim();
     const arrival = +document.getElementById('arrival').value;
-    const burst   = +document.getElementById('burst').value;
-    const memory  = +document.getElementById('memory').value;
+    const burst = +document.getElementById('burst').value;
+    const memory = +document.getElementById('memory').value;
 
     if (!nombre || [arrival, burst, memory].some(v => isNaN(v) || v < 0)) {
       return alert('Completa todos los campos con valores válidos.');
@@ -45,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
   //
   // 2) Selector de algoritmo y campo de quantum
   //
-  const selectAlgo   = document.getElementById('algo');
+  const selectAlgo = document.getElementById('algo');
   const inputQuantum = document.getElementById('quantum');
   const labelQuantum = document.getElementById('label-quantum');
 
@@ -54,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     labelQuantum.style.display = isRR ? 'inline-block' : 'none';
     inputQuantum.style.display = isRR ? 'inline-block' : 'none';
-    inputQuantum.disabled      = !isRR;
+    inputQuantum.disabled = !isRR;
 
     if (isRR) {
       if (!window.simulator.config.quantum) {
@@ -73,20 +75,31 @@ document.addEventListener('DOMContentLoaded', () => {
   // 3) Botones Iniciar / Detener simulación
   //
   const startBtn = document.getElementById('start-btn');
-  const stopBtn  = document.getElementById('stop-btn');
-
+  const stopBtn = document.getElementById('stop-btn');
   startBtn.addEventListener('click', () => {
     const alg = window.simulator.config.algoritmo;
-    const q   = parseInt(inputQuantum.value, 10);
+    const q = parseInt(document.getElementById('quantum').value, 10);
     if (alg === 'RR' && (isNaN(q) || q < 1)) {
       return alert('Ingresa un quantum válido (>0).');
     }
     window.simulator.config.quantum = q;
-    console.log(`Iniciando simulación con algoritmo=${alg}, quantum=${q}`);
-    // Por ejemplo, crear planificador e inyectar la memoria:
-    // window.simulator.planificador = new Planificador(window.simulator.procesos, window.simulator.memoria, alg, q);
-    // drawMemory(window.simulator.memoria);
-    // renderProcessList();
+
+    // ← AQUÍ inicializamos la memoria si aún no existe
+    if (!window.simulator.memoria) {
+      window.simulator.memoria = new Memoria(TOTAL_KB);
+    }
+
+    // Instanciamos el scheduler
+    window.simulator.planificador = new Planificador(
+      window.simulator.procesos,
+      window.simulator.memoria,
+      alg,
+      q
+    );
+
+    // Dibujamos el mock-up de memoria y la lista de procesos
+    drawMemory(window.simulator.memoria);
+    renderProcessList();
   });
 
   stopBtn.addEventListener('click', () => {
