@@ -1,14 +1,16 @@
 // src/ui/controls.js
 import { Proceso } from '../core/process.js';
+import { drawMemory } from '../renderer/canvas.js';   // ← importamos drawMemory
 
 //
 // Configuración inicial del simulador
 //
 window.simulator = window.simulator || {};
 window.simulator.procesos = window.simulator.procesos || [];
+window.simulator.memoria   = window.simulator.memoria   || null;  // la inyectarás desde el init
 window.simulator.config = window.simulator.config || {
-  algoritmo: 'SJF',   // por defecto
-  quantum: null       // sólo válido cuando algoritmo === 'RR'
+  algoritmo: 'SJF',
+  quantum:   null
 };
 
 let nextPID = 1;
@@ -34,6 +36,9 @@ document.addEventListener('DOMContentLoaded', () => {
     window.simulator.procesos.push(proceso);
 
     renderProcessList();
+    if (window.simulator.memoria) {
+      drawMemory(window.simulator.memoria);
+    }
     form.reset();
   });
 
@@ -47,30 +52,21 @@ document.addEventListener('DOMContentLoaded', () => {
   selectAlgo.addEventListener('change', () => {
     const isRR = selectAlgo.value === 'RR';
 
-    // Mostrar u ocultar el campo de quantum
-    labelQuantum.style.display   = isRR ? 'inline-block' : 'none';
-    inputQuantum.style.display   = isRR ? 'inline-block' : 'none';
-
-    // Habilitar o deshabilitar el input
-    inputQuantum.disabled = !isRR;
+    labelQuantum.style.display = isRR ? 'inline-block' : 'none';
+    inputQuantum.style.display = isRR ? 'inline-block' : 'none';
+    inputQuantum.disabled      = !isRR;
 
     if (isRR) {
-      // Si no hay quantum previo, ponemos el por defecto
       if (!window.simulator.config.quantum) {
         window.simulator.config.quantum = DEFAULT_QUANTUM;
       }
       inputQuantum.value = window.simulator.config.quantum;
     } else {
-      // Al cambiar a SJF, limpiamos el valor
       window.simulator.config.quantum = null;
       inputQuantum.value = '';
     }
-
-    // Guardamos el algoritmo
     window.simulator.config.algoritmo = selectAlgo.value;
   });
-
-  // Inicializamos la visibilidad según el algoritmo por defecto
   selectAlgo.dispatchEvent(new Event('change'));
 
   //
@@ -87,12 +83,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     window.simulator.config.quantum = q;
     console.log(`Iniciando simulación con algoritmo=${alg}, quantum=${q}`);
-    // Aquí: window.simulator.startSimulation();
+    // Por ejemplo, crear planificador e inyectar la memoria:
+    // window.simulator.planificador = new Planificador(window.simulator.procesos, window.simulator.memoria, alg, q);
+    // drawMemory(window.simulator.memoria);
+    // renderProcessList();
   });
 
   stopBtn.addEventListener('click', () => {
     console.log('Deteniendo simulación');
-    // Aquí: window.simulator.stopSimulation();
+    // window.simulator.planificador = null;
   });
 });
 
@@ -109,7 +108,7 @@ function renderProcessList() {
   ul.innerHTML = '';
   for (const p of window.simulator.procesos) {
     const li = document.createElement('li');
-    li.textContent = `${p.nombre} (PID=${p.id}): llegada=${p.llegada}ms, burst=${p.burst}ms, mem=${p.memoria}KB`;
+    li.textContent = `${p.nombre} (PID=${p.id}): estado=${p.estado}, llegada=${p.llegada}ms, burst=${p.burst}ms, mem=${p.memoria}KB`;
     ul.appendChild(li);
   }
 }
