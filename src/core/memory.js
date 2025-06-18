@@ -1,7 +1,7 @@
 export class Bloque {
   constructor(startKB, tamañoKB, proceso = null) {
-    this.start   = startKB;
-    this.tamaño  = tamañoKB;
+    this.start = startKB;
+    this.tamaño = tamañoKB;
     this.proceso = proceso;
   }
   get libre() {
@@ -11,9 +11,9 @@ export class Bloque {
 
 export class Memoria {
   constructor(totalKB) {
-    this.total   = totalKB;
-    this.bloques = [ new Bloque(0, totalKB) ];
-    this.swap    = [];
+    this.total = totalKB;
+    this.bloques = [new Bloque(0, totalKB)];
+    this.swap = [];
   }
 
   asignar(proceso) {
@@ -25,8 +25,8 @@ export class Memoria {
           this.bloques.splice(i + 1, 0, resto);
           b.tamaño = proceso.memoria;
         }
-        b.proceso         = proceso;
-        proceso.bloque    = b;
+        b.proceso = proceso;
+        proceso.bloque = b;
         return true;
       }
     }
@@ -35,10 +35,11 @@ export class Memoria {
 
   liberar(proceso) {
     const b = proceso.bloque;
-    if (!b) return;
-    b.proceso      = null;
-    proceso.bloque = null;
-    this._coalescer();
+    if (b) {
+      b.proceso = null;
+      proceso.bloque = null;
+      this._coalescer();
+    }
   }
 
   _coalescer() {
