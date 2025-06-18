@@ -3,6 +3,7 @@ import { Proceso } from '../core/process.js';
 import { drawMemory } from '../renderer/canvas.js';
 import { Planificador } from '../core/scheduler.js';
 import { Memoria } from '../core/memory.js';
+
 //
 // Configuración inicial del simulador
 //
@@ -14,11 +15,31 @@ window.simulator.config = window.simulator.config || {
   quantum: null
 };
 
-let nextPID = 1;
+const TOTAL_KB = 2 * 1024 * 1024;  // 2 GB en KB
 const DEFAULT_QUANTUM = 5;
-const TOTAL_KB = 2 * 1024 * 1024;
+let nextPID = 1;
 
 document.addEventListener('DOMContentLoaded', () => {
+  //
+  // Inicializar memoria si no existe
+  //
+  if (!window.simulator.memoria) {
+    window.simulator.memoria = new Memoria(TOTAL_KB);
+  }
+
+  //
+  // Mock-up inicial (HU05): asignar un par de procesos de prueba
+  //
+  const pA = new Proceso(nextPID++, 'TestA', 0, 0, 512 * 1024);  // 512 MB
+  const pB = new Proceso(nextPID++, 'TestB', 0, 0, 256 * 1024);  // 256 MB
+  window.simulator.procesos.push(pA, pB);
+  window.simulator.memoria.asignar(pA);
+  window.simulator.memoria.asignar(pB);
+
+  // Dibujar estado inicial de la memoria y la lista
+  drawMemory(window.simulator.memoria);
+  renderProcessList();
+
   //
   // 1) Formulario de creación de procesos
   //
@@ -36,11 +57,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const proceso = new Proceso(nextPID++, nombre, arrival, burst, memory);
     window.simulator.procesos.push(proceso);
-
-    renderProcessList();
-    if (window.simulator.memoria) {
-      drawMemory(window.simulator.memoria);
+    const ok = window.simulator.memoria.asignar(proceso);
+    if (!ok) {
+      alert('Memoria insuficiente para P' + proceso.id);
+      window.simulator.procesos.pop();   // opcional: lo quitas de la lista
+      return;
     }
+    proceso.estado = 'Listo';
+    renderProcessList();
+    drawMemory(window.simulator.memoria);
+
     form.reset();
   });
 
@@ -67,29 +93,31 @@ document.addEventListener('DOMContentLoaded', () => {
       window.simulator.config.quantum = null;
       inputQuantum.value = '';
     }
+
     window.simulator.config.algoritmo = selectAlgo.value;
   });
   selectAlgo.dispatchEvent(new Event('change'));
 
   //
-  // 3) Botones Iniciar / Detener simulación
+  // 3) Botones Iniciar / Detener simulación (HU06)
   //
   const startBtn = document.getElementById('start-btn');
   const stopBtn = document.getElementById('stop-btn');
+
   startBtn.addEventListener('click', () => {
     const alg = window.simulator.config.algoritmo;
-    const q = parseInt(document.getElementById('quantum').value, 10);
+    const q = parseInt(inputQuantum.value, 10);
     if (alg === 'RR' && (isNaN(q) || q < 1)) {
       return alert('Ingresa un quantum válido (>0).');
     }
     window.simulator.config.quantum = q;
 
-    // ← AQUÍ inicializamos la memoria si aún no existe
+    // Asegurarnos de tener memoria instanciada
     if (!window.simulator.memoria) {
       window.simulator.memoria = new Memoria(TOTAL_KB);
     }
 
-    // Instanciamos el scheduler
+    // Instanciar el planificador
     window.simulator.planificador = new Planificador(
       window.simulator.procesos,
       window.simulator.memoria,
@@ -97,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
       q
     );
 
-    // Dibujamos el mock-up de memoria y la lista de procesos
+    // Dibujar estado tras iniciar
     drawMemory(window.simulator.memoria);
     renderProcessList();
   });
@@ -121,7 +149,8 @@ function renderProcessList() {
   ul.innerHTML = '';
   for (const p of window.simulator.procesos) {
     const li = document.createElement('li');
-    li.textContent = `${p.nombre} (PID=${p.id}): estado=${p.estado}, llegada=${p.llegada}ms, burst=${p.burst}ms, mem=${p.memoria}KB`;
+    li.textContent =
+      `${p.nombre} (PID=${p.id}): estado=${p.estado}, llegada=${p.llegada}ms, burst=${p.burst}ms, mem=${p.memoria}KB`;
     ul.appendChild(li);
   }
 }
