@@ -1,33 +1,21 @@
 {
   "name": "simuladorso",
   "version": "1.0.0",
-  "description": "",
   "main": "src/main.js",
-  "directories": {
-    "doc": "docs",
-    "test": "test"
-  },
+  "type": "module",
   "scripts": {
     "start": "electron .",
     "test": "jest"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Jvviers/SimuladorSO.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module",
-  "bugs": {
-    "url": "https://github.com/Jvviers/SimuladorSO/issues"
-  },
-  "homepage": "https://github.com/Jvviers/SimuladorSO#readme",
   "dependencies": {
     "chart.js": "^4.4.9",
     "electron": "^36.4.0"
   },
   "devDependencies": {
-    "jest": "^30.0.0"
+    "@babel/core": "^7.27.4",
+    "@babel/preset-env": "^7.27.2",
+    "babel-jest": "^30.0.1",
+    "jest": "^30.0.0",
+    "jest-environment-jsdom": "^30.0.1"
   }
 }
