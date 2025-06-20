@@ -1,204 +1,359 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-  <meta charset="UTF-8" />
-  <title>Simulador de Procesos SO</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      margin: 0;
-      padding: 0;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Planificación de Procesos</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
 
-    header {
-      background: #276ef1;
-      color: white;
-      padding: 12px;
-      text-align: center;
-    }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+        }
 
-    #controls {
-      padding: 16px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 24px;
-    }
+        .controls-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
 
-    /* Formulario de proceso */
-    #process-form {
-      flex: 1 1 300px;
-    }
+        .main-display {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
 
-    #process-form div {
-      margin-bottom: 8px;
-    }
+        .form-group {
+            margin-bottom: 15px;
+        }
 
-    #process-form label {
-      display: inline-block;
-      width: 140px;
-    }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
 
-    #process-form input {
-      width: 160px;
-      padding: 4px;
-    }
+        input, select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
 
-    #process-form button {
-      padding: 6px 12px;
-      background: #28a745;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #2196f3;
+        }
 
-    #process-form button:hover {
-      background: #218838;
-    }
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
 
-    /* Lista de procesos */
-    #process-list {
-      flex: 1 1 300px;
-      list-style: none;
-      padding: 0;
-      margin-top: 24px;
-      max-height: 200px;
-      overflow-y: auto;
-      border: 1px solid #ddd;
-    }
+        button:hover {
+            background: #1976d2;
+        }
 
-    #process-list li {
-      padding: 4px 8px;
-      border-bottom: 1px solid #eee;
-    }
+        button.secondary {
+            background: #757575;
+        }
 
-    /* Configuración de simulación */
-    #sim-config {
-      flex: 1 1 300px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+        button.secondary:hover {
+            background: #616161;
+        }
 
-    #sim-config label {
-      width: auto;
-    }
+        button.success {
+            background: #4caf50;
+        }
 
-    #sim-config select,
-    #sim-config input {
-      width: 120px;
-      padding: 4px;
-    }
+        button.success:hover {
+            background: #388e3c;
+        }
 
-    /* Botones iniciar/detener */
-    #sim-buttons {
-      flex: 1 1 300px;
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      margin-top: 16px;
-    }
+        #canvas {
+            border: 2px solid #e0e0e0;
+            border-radius: 4px;
+            width: 100%;
+            height: 120px;
+            margin-bottom: 20px;
+        }
 
-    #sim-buttons button {
-      padding: 6px 12px;
-      border: none;
-      cursor: pointer;
-      color: white;
-    }
+        .metrics-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+        }
 
-    #start-btn {
-      background: #007bff;
-    }
+        #metrics-chart {
+            max-height: 400px;
+            margin-top: 20px;
+        }
 
-    #stop-btn {
-      background: #dc3545;
-    }
+        .process-lists {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
 
-    #start-btn:hover {
-      background: #0069d9;
-    }
+        .process-list-container {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
 
-    #stop-btn:hover {
-      background: #c82333;
-    }
+        .process-list-container h3 {
+            margin: 0 0 10px 0;
+            color: #495057;
+        }
 
-    /* Canvas y charts */
-    #canvas,
-    #charts {
-      border: 1px solid #ccc;
-      margin: 16px;
-      height: 240px;
-    }
-  </style>
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            padding: 8px 12px;
+            margin: 4px 0;
+            background: white;
+            border-radius: 4px;
+            border-left: 4px solid #dee2e6;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        /* State-based styling */
+        .estado-nuevo { border-left-color: #9e9e9e; }
+        .estado-listo { border-left-color: #2196f3; }
+        .estado-ejecutando { 
+            border-left-color: #4caf50; 
+            background: #e8f5e8;
+            font-weight: bold;
+        }
+        .estado-terminado { 
+            border-left-color: #f44336; 
+            opacity: 0.7;
+        }
+        .estado-swapped { 
+            border-left-color: #ff9800; 
+            background: #fff3e0;
+        }
+
+        /* Animations */
+        .pulse-animation {
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); box-shadow: 0 0 15px rgba(33, 150, 243, 0.4); }
+            100% { transform: scale(1); }
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .tab.active {
+            color: #2196f3;
+            border-bottom-color: #2196f3;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .status-bar {
+            background: #263238;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .simulation-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
-
 <body>
-  <header>
-    <h1>Simulador de Procesos SO</h1>
-  </header>
+    <div class="container">
+        <div class="controls-panel">
+            <h2>Control de Simulación</h2>
+            
+            <!-- Status Bar -->
+            <div class="status-bar">
+                <div>Tiempo: <span id="current-time">0</span>ms</div>
+                <div>Algoritmo: <span id="current-algo">SJF</span></div>
+                <div>Estado: <span id="sim-status">Detenido</span></div>
+            </div>
 
-  <div id="controls">
-    <!-- 1) Formulario de creación de procesos -->
-    <form id="process-form">
-      <h2>Crear Nuevo Proceso</h2>
-      <div>
-        <label for="name">Nombre:</label>
-        <input type="text" id="name" placeholder="P1" required>
-      </div>
-      <div>
-        <label for="arrival">Llegada (ms):</label>
-        <input type="number" id="arrival" min="0" placeholder="0" required>
-      </div>
-      <div>
-        <label for="burst">Burst CPU (ms):</label>
-        <input type="number" id="burst" min="1" placeholder="50" required>
-      </div>
-      <div>
-        <label for="memory">Mem. (KB):</label>
-        <input type="number" id="memory" min="1" placeholder="128" required>
-      </div>
-      <button type="submit">Añadir Proceso</button>
-    </form>
+            <!-- Process Creation Form -->
+            <form id="process-form">
+                <h3>Crear Nuevo Proceso</h3>
+                <div class="form-group">
+                    <label for="name">Nombre del Proceso:</label>
+                    <input type="text" id="name" placeholder="ej. ProcA" required>
+                </div>
+                <div class="form-group">
+                    <label for="arrival">Tiempo de Llegada (ms):</label>
+                    <input type="number" id="arrival" min="0" value="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="burst">CPU Burst (ms):</label>
+                    <input type="number" id="burst" min="1" value="10" required>
+                </div>
+                <div class="form-group">
+                    <label for="memory">Memoria Requerida (KB):</label>
+                    <input type="number" id="memory" min="1" value="256" required>
+                </div>
+                <button type="submit">Crear Proceso</button>
+            </form>
 
-    <!-- 2) Lista de procesos -->
-    <ul id="process-list"></ul>
+            <!-- Algorithm Selection -->
+            <div class="form-group">
+                <label for="algo">Algoritmo de Planificación:</label>
+                <select id="algo">
+                    <option value="SJF">Shortest Job First (SJF)</option>
+                    <option value="RR">Round Robin (RR)</option>
+                </select>
+            </div>
+            
+            <div class="form-group" id="quantum-container">
+                <label for="quantum" id="label-quantum">Quantum (ms):</label>
+                <input type="number" id="quantum" min="1" value="5">
+            </div>
 
-    <!-- 3) Configuración de simulador -->
-    <div id="sim-config">
-      <h2>Configuración</h2>
-      <div>
-        <label for="algo">Algoritmo:</label>
-        <select id="algo">
-          <option value="SJF">SJF (Shortest Job First)</option>
-          <option value="RR">RR (Round Robin)</option>
-        </select>
-      </div>
-      <div>
-        <label for="quantum" id="label-quantum" style="display:none;">Quantum (ms):</label>
-        <input type="number" id="quantum" min="1" value="5" style="display:none;" />
-      </div>
+            <!-- Simulation Controls -->
+            <div class="simulation-controls">
+                <button id="start-btn" class="success">Iniciar</button>
+                <button id="step-btn" class="secondary">Paso</button>
+                <button id="stop-btn" class="secondary">Detener</button>
+                <button id="reset-btn" class="secondary">Reiniciar</button>
+            </div>
+
+            <!-- Metrics Controls -->
+            <div class="metrics-section">
+                <h3>Métricas y Análisis</h3>
+                <button id="show-metrics-btn">Mostrar Métricas</button>
+                <button id="export-data-btn" class="secondary">Exportar Datos</button>
+                <button id="compare-runs-btn">Comparar Ejecuciones</button>
+            </div>
+        </div>
+
+        <div class="main-display">
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab active" data-tab="visualization">Visualización</button>
+                <button class="tab" data-tab="metrics">Métricas</button>
+                <button class="tab" data-tab="timeline">Timeline</button>
+            </div>
+
+            <!-- Visualization Tab -->
+            <div class="tab-content active" id="visualization">
+                <h3>Estado de la Memoria</h3>
+                <canvas id="canvas" width="800" height="120"></canvas>
+                
+                <div class="process-lists">
+                    <div class="process-list-container">
+                        <h3>Procesos en RAM</h3>
+                        <ul id="process-list"></ul>
+                    </div>
+                    
+                    <div class="process-list-container" id="swap-container">
+                        <h3>Swap (Disco)</h3>
+                        <ul id="swap-ul"></ul>
+                        <button id="recover-btn" class="secondary">Recuperar de Swap</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metrics Tab -->
+            <div class="tab-content" id="metrics">
+                <h3>Análisis de Rendimiento</h3>
+                <canvas id="metrics-chart"></canvas>
+                <div id="metrics-table"></div>
+            </div>
+
+            <!-- Timeline Tab -->
+            <div class="tab-content" id="timeline">
+                <h3>Timeline de Ejecución</h3>
+                <canvas id="timeline-chart" width="800" height="400"></canvas>
+            </div>
+        </div>
     </div>
 
-    <!-- 4) Botones de simulación -->
-    <div id="sim-buttons">
-      <button id="start-btn">Iniciar Simulación</button>
-      <button id="stop-btn">Detener Simulación</button>
-    </div>
-  </div>
+    <script type="module">
+        // Tab functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs and contents
+                document.querySelectorAll('.tab, .tab-content').forEach(el => 
+                    el.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding content
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+            });
+        });
 
-  <!-- 5) Paneles de salida -->
-  <canvas id="canvas" width="800" height="240"></canvas>
+        // Status bar updates
+        function updateStatusBar(time, algorithm, status) {
+            document.getElementById('current-time').textContent = time;
+            document.getElementById('current-algo').textContent = algorithm;
+            document.getElementById('sim-status').textContent = status;
+        }
 
-  <div id="charts"></div>
-
-  <!-- 6) Módulos ESM -->
-  <script type="module" src="../src/ui/controls.js"></script>
-  <script type="module" src="../src/renderer/canvas.js"></script>
-  <script type="module" src="../src/renderer/charts.js"></script>
+        // Export your main controls script here
+        // This would integrate with your existing controls.js
+        import('./src/ui/controls.js');
+    </script>
 </body>
-
 </html>
-
-<style>
-  #canvas { width: 100%; height: 240px; }
-</style>

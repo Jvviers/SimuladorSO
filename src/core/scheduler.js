@@ -1,36 +1,20 @@
 // src/core/scheduler.js
-import { Estado, Proceso } from './process.js';
-import { Memoria }          from './memory.js';
+import { Estado } from './process.js';
 
 export class Planificador {
-  /**
-   * @param {Proceso[]} procesos – lista de procesos creados
-   * @param {Memoria} memoria     – instancia de gestión de memoria
-   * @param {'SJF'|'RR'} algoritmo
-   * @param {number|null} quantum – sólo para Round Robin
-   */
   constructor(procesos, memoria, algoritmo = 'SJF', quantum = null) {
-    this.procesos    = procesos;
-    this.memoria     = memoria;
-    this.algoritmo   = algoritmo;
-    this.quantum     = quantum;
-    this.tActual     = 0;
-    this.enEjecucion = null;
-
-    // Parámetros RR
-    this.rrCola            = [];
-    this.rrQuantumRestante = 0;
-  }
-
-  scheduleSJF() {
-    const listos = this.procesos.filter(p => p.estado === Estado.LISTO);
-    if (!listos.length) return null;
-    listos.sort((a, b) => a.restante - b.restante);
-    return listos[0];
+    this.procesos      = procesos;
+    this.memoria       = memoria;
+    this.algoritmo     = algoritmo;
+    this.quantum       = quantum;
+    this.tActual       = 0;
+    this.enEjecucion   = null;
+    this.rrCola        = [];
+    this.rrQuantumRest = 0;
   }
 
   tick() {
-    // 1) Llegadas
+    // 1) Cargar nuevos
     for (const p of this.procesos) {
       if (p.estado === Estado.NUEVO && p.llegada <= this.tActual) {
         if (this.memoria.asignar(p)) {
@@ -40,55 +24,47 @@ export class Planificador {
       }
     }
 
-    // 2) Ejecutar en CPU
+    // 2) Ejecutar actual
     if (this.enEjecucion) {
       this.enEjecucion.tick(this.tActual);
-
-      if (this.algoritmo === 'RR') {
-        this.rrQuantumRestante--;
-        if (this.rrQuantumRestante <= 0 && this.enEjecucion.estado === Estado.EJECUTANDO) {
-          this.enEjecucion.estado = Estado.LISTO;
-          this.rrCola.push(this.enEjecucion);
-          this.enEjecucion = null;
-        }
-      }
-
-      if (this.enEjecucion && this.enEjecucion.estado === Estado.TERMINADO) {
+      if (this.algoritmo === 'RR') this.rrQuantumRest--;
+      if (this.enEjecucion.estado === Estado.TERMINADO) {
         this.memoria.liberar(this.enEjecucion);
+        this.enEjecucion = null;
+      } else if (this.algoritmo === 'RR' && this.rrQuantumRest <= 0) {
+        this.enEjecucion.estado = Estado.LISTO;
+        this.rrCola.push(this.enEjecucion);
         this.enEjecucion = null;
       }
     }
 
-    // 3) Despacho
+    // 3) Despachar nuevo si hace falta
     if (!this.enEjecucion) {
+      const listos = this.procesos.filter(p => p.estado === Estado.LISTO);
       if (this.algoritmo === 'SJF') {
-        const siguiente = this.scheduleSJF();
-        if (siguiente) {
-          this.enEjecucion = siguiente;
-          this.enEjecucion.estado = Estado.EJECUTANDO;
-        }
-      } else {
+        listos.sort((a, b) => a.restante - b.restante);
+        if (listos[0]) this.enEjecucion = listos[0];
+      } else { // RR
         while (this.rrCola.length) {
-          const candidato = this.rrCola.shift();
-          if (candidato.estado === Estado.LISTO) {
-            this.enEjecucion = candidato;
-            this.enEjecucion.estado = Estado.EJECUTANDO;
-            this.rrQuantumRestante = this.quantum;
+          const c = this.rrCola.shift();
+          if (c.estado === Estado.LISTO) {
+            this.enEjecucion = c;
             break;
           }
         }
+        this.rrQuantumRest = this.quantum;
       }
+      if (this.enEjecucion) this.enEjecucion.estado = Estado.EJECUTANDO;
     }
 
-    // 4) Contabilizar espera
+    // 4) Actualizar espera/respuesta
     for (const p of this.procesos) {
-      if (p.estado === Estado.LISTO) p.tEspera++;
+      if (p.estado !== Estado.TERMINADO) p.tick(this.tActual);
     }
 
     this.tActual++;
   }
 
-  /** @returns {boolean} */
   finalizado() {
     return this.procesos.every(p => p.estado === Estado.TERMINADO);
   }

@@ -1,9 +1,11 @@
+//src/core/process.js
 export const Estado = {
   NUEVO:      'Nuevo',
   LISTO:      'Listo',
   EJECUTANDO: 'Ejecutando',
   ESPERANDO:  'Esperando',
-  TERMINADO:  'Terminado'
+  TERMINADO:  'Terminado',
+  SWAPPED:  'Swapped',
 };
 
 export class Proceso {
