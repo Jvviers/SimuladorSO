@@ -1,13 +1,34 @@
-// src/renderer/animations.js
 export class AnimationManager {
-  constructor(canvas, processListElement) {
+  constructor(canvas, processListElement, swapListElement) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this.processListElement = processListElement;
+    this.swapListElement = swapListElement;
     this.animations = [];
+    this.isRunning = false;
+    
+    // Start animation loop
+    this.startAnimationLoop();
   }
 
-  // Animate state transitions
+  startAnimationLoop() {
+    if (this.isRunning) return;
+    this.isRunning = true;
+    
+    const animate = () => {
+      if (this.isRunning) {
+        this.update();
+        requestAnimationFrame(animate);
+      }
+    };
+    animate();
+  }
+
+  stopAnimationLoop() {
+    this.isRunning = false;
+  }
+
+  // HU09: Enhanced state change animation
   animateStateChange(proceso, oldState, newState) {
     const animation = {
       type: 'state-change',
@@ -15,100 +36,139 @@ export class AnimationManager {
       oldState: oldState,
       newState: newState,
       startTime: Date.now(),
-      duration: 500 // 500ms animation
+      duration: 600,
+      phase: 'highlight'
     };
     
     this.animations.push(animation);
-    this.highlightProcessInList(proceso, newState);
+    this.updateProcessInList(proceso, newState);
+    
+    // Add special effects for critical transitions
+    if (newState === 'Ejecutando') {
+      this.addExecutionGlow(proceso);
+    }
   }
 
-  // Animate swap operations
+  // HU08 & HU09: Enhanced swap animation
   animateSwap(proceso, toSwap = true) {
     const animation = {
       type: 'swap',
       proceso: proceso,
       toSwap: toSwap,
       startTime: Date.now(),
-      duration: 800
+      duration: toSwap ? 1000 : 800,
+      phase: 'moving'
     };
     
     this.animations.push(animation);
+    
+    // Update UI immediately for better UX
+    if (toSwap) {
+      this.showSwapTransition(proceso, 'out');
+    } else {
+      this.showSwapTransition(proceso, 'in');
+    }
   }
 
-  // Highlight process in the UI list
-  highlightProcessInList(proceso, state) {
+  // HU09: Visual feedback for process transitions
+  updateProcessInList(proceso, state) {
     const listItems = this.processListElement.querySelectorAll('li');
     listItems.forEach(li => {
       if (li.textContent.includes(`PID=${proceso.id}`)) {
-        li.classList.remove('estado-nuevo', 'estado-listo', 'estado-ejecutando', 'estado-terminado', 'estado-swapped');
+        // Remove all state classes
+        li.classList.remove('estado-nuevo', 'estado-listo', 'estado-ejecutando', 
+                           'estado-terminado', 'estado-swapped');
+        
+        // Add new state class
         li.classList.add(`estado-${state.toLowerCase()}`);
         
-        // Add pulse effect for state changes
-        li.classList.add('pulse-animation');
-        setTimeout(() => li.classList.remove('pulse-animation'), 500);
+        // Add transition effect
+        li.classList.add('state-transition');
+        setTimeout(() => li.classList.remove('state-transition'), 600);
+        
+        // Update text content with current state
+        this.updateProcessText(li, proceso, state);
       }
     });
   }
 
-  // Update animations each frame
+  updateProcessText(li, proceso, state) {
+    li.textContent = `${proceso.nombre} (PID=${proceso.id}): estado=${state}, ` +
+                    `llegada=${proceso.llegada}ms, burst=${proceso.burst}ms, ` +
+                    `restante=${proceso.restante}ms, mem=${proceso.memoria}KB`;
+  }
+
+  // HU09: Special glow effect for executing processes
+  addExecutionGlow(proceso) {
+    const glowAnimation = {
+      type: 'execution-glow',
+      proceso: proceso,
+      startTime: Date.now(),
+      duration: 2000,
+      intensity: 0
+    };
+    this.animations.push(glowAnimation);
+  }
+
+  // HU08 & HU09: Swap transition visual effects
+  showSwapTransition(proceso, direction) {
+    const swapItems = this.swapListElement.querySelectorAll('li');
+    const processItems = this.processListElement.querySelectorAll('li');
+    
+    if (direction === 'out') {
+      // Find process in main list and add fade-out effect
+      processItems.forEach(li => {
+        if (li.textContent.includes(`PID=${proceso.id}`)) {
+          li.classList.add('swapping-out');
+          setTimeout(() => li.classList.remove('swapping-out'), 1000);
+        }
+      });
+    } else {
+      // Find process in swap list and add fade-in effect to main list
+      swapItems.forEach(li => {
+        if (li.textContent.includes(`PID=${proceso.id}`)) {
+          li.classList.add('recovering-from-swap');
+          setTimeout(() => li.classList.remove('recovering-from-swap'), 800);
+        }
+      });
+    }
+  }
+
+  // Animation update loop
   update() {
     const now = Date.now();
     this.animations = this.animations.filter(anim => {
       const elapsed = now - anim.startTime;
       const progress = Math.min(elapsed / anim.duration, 1);
       
-      if (anim.type === 'swap') {
-        this.renderSwapAnimation(anim, progress);
+      switch (anim.type) {
+        case 'swap':
+          this.renderSwapAnimation(anim, progress);
+          break;
+        case 'state-change':
+          this.renderStateChangeAnimation(anim, progress);
+          break;
+        case 'execution-glow':
+          this.renderExecutionGlow(anim, progress);
+          break;
       }
       
-      return progress < 1; // Keep animation if not finished
+      return progress < 1;
     });
   }
 
   renderSwapAnimation(animation, progress) {
-    const { proceso, toSwap } = animation;
-    
-    // Create visual feedback for swap operations
-    if (toSwap) {
-      // Animate process moving to swap area
-      const opacity = 1 - progress;
-      this.ctx.save();
-      this.ctx.globalAlpha = opacity;
-      // Draw fading process block
-      this.ctx.restore();
-    } else {
-      // Animate process returning from swap
-      const opacity = progress;
-      this.ctx.save();
-      this.ctx.globalAlpha = opacity;
-      // Draw appearing process block
-      this.ctx.restore();
-    }
+    // Visual feedback is handled by CSS classes
+    // This could be extended for canvas-based animations
   }
-}
 
-// Enhanced CSS for animations (add to your stylesheet)
-export const animationStyles = `
-.pulse-animation {
-  animation: pulse 0.5s ease-in-out;
-}
+  renderStateChangeAnimation(animation, progress) {
+    // Enhanced state change effects handled by CSS
+  }
 
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
-
-.estado-nuevo { border-left: 4px solid #9e9e9e; }
-.estado-listo { border-left: 4px solid #2196f3; }
-.estado-ejecutando { border-left: 4px solid #4caf50; }
-.estado-terminado { border-left: 4px solid #f44336; }
-.estado-swapped { border-left: 4px solid #ff9800; }
-
-li {
-  transition: all 0.3s ease;
-  margin: 2px 0;
-  padding: 8px;
-  border-radius: 4px;
-}
-`;
+  renderExecutionGlow(animation, progress) {
+    // Pulsing effect for executing processes
+    const intensity = Math.sin(progress * Math.PI * 4) * 0.5 + 0.5;
+    // Apply glow effect via CSS classes
+  }
+}   
