@@ -8,22 +8,22 @@ import { swapAnimationIntegrator } from '../integration/hu08_hu09.js';
  */
 export function initializeEnhancedSystem() {
   console.log('🚀 Initializing Enhanced Swap & Animation System...');
-  
+
   // 1. Initialize the swap animation integrator
   swapAnimationIntegrator.initialize();
-  
+
   // 2. Setup enhanced memory rendering
   setupEnhancedMemoryRendering();
-  
+
   // 3. Setup enhanced controls
   setupEnhancedControls();
-  
+
   // 4. Setup simulation event listeners
   setupSimulationEventListeners();
-  
+
   // 5. Initialize CSS animations
   injectEnhancedCSS();
-  
+
   console.log('✅ Enhanced system initialized successfully');
 }
 
@@ -35,7 +35,7 @@ function setupEnhancedMemoryRendering() {
   window.drawMemoryEnhanced = (memoria) => {
     drawMemoryWithSwap(memoria);
   };
-  
+
   // Replace existing drawMemory calls
   if (window.drawMemory) {
     window.drawMemoryOriginal = window.drawMemory;
@@ -49,18 +49,18 @@ function setupEnhancedMemoryRendering() {
 export function drawMemoryWithSwap(memoria) {
   const canvas = document.getElementById('canvas');
   if (!canvas) return;
-  
+
   const ctx = canvas.getContext('2d');
   const W = canvas.width;
   const H = canvas.height - 40; // Reserve space for swap indicator
-  
+
   ctx.clearRect(0, 0, W, canvas.height);
 
   // Draw memory blocks
   let x = 0;
   for (const bloque of memoria.bloques) {
     const w = (bloque.tamaño / memoria.total) * W;
-    
+
     // Enhanced coloring
     if (bloque.libre) {
       ctx.fillStyle = '#e8f5e8';
@@ -82,14 +82,14 @@ export function drawMemoryWithSwap(memoria) {
           ctx.strokeStyle = '#757575';
       }
     }
-    
+
     ctx.fillRect(x, 0, w, H);
     ctx.strokeRect(x, 0, w, H);
 
     // Enhanced labeling
     ctx.fillStyle = bloque.libre ? '#2e7d32' : '#fff';
     ctx.font = 'bold 11px sans-serif';
-    
+
     if (bloque.proceso) {
       ctx.fillText(`${bloque.proceso.nombre}`, x + 3, 15);
       ctx.font = '9px sans-serif';
@@ -115,7 +115,7 @@ export function drawMemoryWithSwap(memoria) {
 function drawSwapIndicator(ctx, swapList, canvasWidth, memoryHeight) {
   const swapY = memoryHeight + 5;
   const swapHeight = 30;
-  
+
   // Swap area background with gradient
   const gradient = ctx.createLinearGradient(0, swapY, 0, swapY + swapHeight);
   if (swapList.length > 0) {
@@ -125,61 +125,61 @@ function drawSwapIndicator(ctx, swapList, canvasWidth, memoryHeight) {
     gradient.addColorStop(0, '#f5f5f5');
     gradient.addColorStop(1, '#eeeeee');
   }
-  
+
   ctx.fillStyle = gradient;
   ctx.fillRect(0, swapY, canvasWidth, swapHeight);
   ctx.strokeStyle = swapList.length > 0 ? '#ff9800' : '#ddd';
   ctx.lineWidth = 2;
   ctx.strokeRect(0, swapY, canvasWidth, swapHeight);
-  
+
   // Swap label and count with icon
   ctx.fillStyle = swapList.length > 0 ? '#e65100' : '#999';
   ctx.font = 'bold 14px sans-serif';
   ctx.fillText(`💾 SWAP`, 8, swapY + 20);
-  
+
   ctx.font = '12px sans-serif';
   ctx.fillText(`(${swapList.length} procesos)`, 70, swapY + 20);
-  
+
   // Draw swapped processes as individual blocks
   let swapX = 150;
   const blockWidth = 50;
   const blockHeight = 20;
   const maxVisible = Math.floor((canvasWidth - 160) / (blockWidth + 5));
   const visibleProcesses = swapList.slice(0, maxVisible);
-  
+
   visibleProcesses.forEach((proceso, index) => {
     // Process block with gradient
     const processGradient = ctx.createLinearGradient(swapX, swapY + 5, swapX, swapY + 25);
     processGradient.addColorStop(0, '#ff9800');
     processGradient.addColorStop(1, '#f57c00');
-    
+
     ctx.fillStyle = processGradient;
     ctx.fillRect(swapX, swapY + 5, blockWidth, blockHeight);
     ctx.strokeStyle = '#e65100';
     ctx.lineWidth = 1;
     ctx.strokeRect(swapX, swapY + 5, blockWidth, blockHeight);
-    
+
     // Process info
     ctx.fillStyle = '#fff';
     ctx.font = 'bold 9px sans-serif';
-    const displayName = proceso.nombre.length > 6 ? 
-                       proceso.nombre.substring(0, 5) + '.' : 
-                       proceso.nombre;
+    const displayName = proceso.nombre.length > 6 ?
+      proceso.nombre.substring(0, 5) + '.' :
+      proceso.nombre;
     ctx.fillText(displayName, swapX + 2, swapY + 16);
-    
+
     ctx.font = '7px sans-serif';
     ctx.fillText(`${proceso.memoria}KB`, swapX + 2, swapY + 23);
-    
+
     swapX += blockWidth + 5;
   });
-  
+
   // Show overflow indicator
   if (swapList.length > maxVisible) {
     ctx.fillStyle = '#e65100';
     ctx.font = 'bold 12px sans-serif';
     ctx.fillText(`+${swapList.length - maxVisible} más`, swapX, swapY + 18);
   }
-  
+
   // Memory usage stats
   if (swapList.length > 0) {
     const totalSwapMemory = swapList.reduce((sum, p) => sum + p.memoria, 0);
@@ -195,19 +195,19 @@ function drawSwapIndicator(ctx, swapList, canvasWidth, memoryHeight) {
 function setupEnhancedControls() {
   // Add process control buttons
   addProcessControlButtons();
-  
+
   // Add memory management controls
   addMemoryManagementControls();
-  
+
   // Add simulation speed controls
   addSimulationSpeedControls();
-  
+
   // Add export/import functionality
   addDataManagementControls();
-  
+
   // Add visual theme controls
   addThemeControls();
-  
+
   // Enhance existing buttons
   enhanceExistingButtons();
 }
@@ -227,10 +227,10 @@ function addProcessControlButtons() {
       <button id="priority-boost-btn" class="btn secondary">⚡ Boost Prioridad</button>
     </div>
   `;
-  
+
   const controlsContainer = document.getElementById('controls');
   controlsContainer.appendChild(processControlsContainer);
-  
+
   // Setup event listeners for process controls
   setupProcessControlListeners();
 }
@@ -243,25 +243,25 @@ function setupProcessControlListeners() {
   const removeProcessBtn = document.getElementById('remove-process-btn');
   const pauseProcessBtn = document.getElementById('pause-process-btn');
   const priorityBoostBtn = document.getElementById('priority-boost-btn');
-  
+
   if (addProcessBtn) {
     addProcessBtn.addEventListener('click', () => {
       showAddProcessDialog();
     });
   }
-  
+
   if (removeProcessBtn) {
     removeProcessBtn.addEventListener('click', () => {
       showRemoveProcessDialog();
     });
   }
-  
+
   if (pauseProcessBtn) {
     pauseProcessBtn.addEventListener('click', () => {
       pauseCurrentProcess();
     });
   }
-  
+
   if (priorityBoostBtn) {
     priorityBoostBtn.addEventListener('click', () => {
       boostProcessPriority();
@@ -287,10 +287,10 @@ function addMemoryManagementControls() {
       <span>Fragmentación: <strong id="fragmentation">0%</strong></span>
     </div>
   `;
-  
+
   const controlsContainer = document.getElementById('controls');
   controlsContainer.appendChild(memoryControlsContainer);
-  
+
   setupMemoryControlListeners();
 }
 
@@ -301,19 +301,19 @@ function setupMemoryControlListeners() {
   const defragBtn = document.getElementById('defrag-btn');
   const garbageCollectBtn = document.getElementById('garbage-collect-btn');
   const memoryStatsBtn = document.getElementById('memory-stats-btn');
-  
+
   if (defragBtn) {
     defragBtn.addEventListener('click', () => {
       performDefragmentation();
     });
   }
-  
+
   if (garbageCollectBtn) {
     garbageCollectBtn.addEventListener('click', () => {
       performGarbageCollection();
     });
   }
-  
+
   if (memoryStatsBtn) {
     memoryStatsBtn.addEventListener('click', () => {
       showMemoryStatistics();
@@ -341,10 +341,10 @@ function addSimulationSpeedControls() {
       </div>
     </div>
   `;
-  
+
   const controlsContainer = document.getElementById('controls');
   controlsContainer.appendChild(speedControlsContainer);
-  
+
   setupSpeedControlListeners();
 }
 
@@ -355,7 +355,7 @@ function setupSpeedControlListeners() {
   const speedSlider = document.getElementById('speed-slider');
   const speedValue = document.getElementById('speed-value');
   const speedBtns = document.querySelectorAll('.speed-btn');
-  
+
   if (speedSlider && speedValue) {
     speedSlider.addEventListener('input', (e) => {
       const speed = parseFloat(e.target.value);
@@ -364,7 +364,7 @@ function setupSpeedControlListeners() {
       updateSpeedButtonStates(speed);
     });
   }
-  
+
   speedBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       const speed = parseFloat(btn.dataset.speed);
@@ -392,10 +392,10 @@ function addDataManagementControls() {
     </div>
     <input type="file" id="import-file" accept=".json" style="display: none;">
   `;
-  
+
   const controlsContainer = document.getElementById('controls');
   controlsContainer.appendChild(dataControlsContainer);
-  
+
   setupDataManagementListeners();
 }
 
@@ -408,21 +408,21 @@ function setupDataManagementListeners() {
   const exportResultsBtn = document.getElementById('export-results-btn');
   const resetSimulationBtn = document.getElementById('reset-simulation-btn');
   const importFile = document.getElementById('import-file');
-  
+
   if (exportConfigBtn) {
     exportConfigBtn.addEventListener('click', exportConfiguration);
   }
-  
+
   if (importConfigBtn) {
     importConfigBtn.addEventListener('click', () => {
       importFile.click();
     });
   }
-  
+
   if (exportResultsBtn) {
     exportResultsBtn.addEventListener('click', exportSimulationResults);
   }
-  
+
   if (resetSimulationBtn) {
     resetSimulationBtn.addEventListener('click', () => {
       if (confirm('¿Estás seguro de que quieres reiniciar toda la simulación?')) {
@@ -430,7 +430,7 @@ function setupDataManagementListeners() {
       }
     });
   }
-  
+
   if (importFile) {
     importFile.addEventListener('change', handleConfigImport);
   }
@@ -459,10 +459,10 @@ function addThemeControls() {
       </label>
     </div>
   `;
-  
+
   const controlsContainer = document.getElementById('controls');
   controlsContainer.appendChild(themeControlsContainer);
-  
+
   setupThemeControlListeners();
 }
 
@@ -472,7 +472,7 @@ function addThemeControls() {
 function setupThemeControlListeners() {
   const themeRadios = document.querySelectorAll('input[name="theme"]');
   const animationsCheckbox = document.getElementById('animations-enabled');
-  
+
   themeRadios.forEach(radio => {
     radio.addEventListener('change', (e) => {
       if (e.target.checked) {
@@ -480,7 +480,7 @@ function setupThemeControlListeners() {
       }
     });
   });
-  
+
   if (animationsCheckbox) {
     animationsCheckbox.addEventListener('change', (e) => {
       toggleAnimations(e.target.checked);
@@ -495,15 +495,15 @@ function enhanceExistingButtons() {
   const startBtn = document.getElementById('start-btn');
   const pauseBtn = document.getElementById('pause-btn');
   const stopBtn = document.getElementById('stop-btn');
-  
+
   if (startBtn) {
     startBtn.addEventListener('click', onSimulationStart);
   }
-  
+
   if (pauseBtn) {
     pauseBtn.addEventListener('click', onSimulationPause);
   }
-  
+
   if (stopBtn) {
     stopBtn.addEventListener('click', onSimulationStop);
   }
@@ -520,13 +520,13 @@ function setupSimulationEventListeners() {
       window.simulator.animationManager.animateStateChange(proceso, oldState, newState);
     }
   });
-  
+
   // Listen for memory changes
   document.addEventListener('memoryUpdated', (e) => {
     updateMemoryDisplay();
     updateMemoryStats();
   });
-  
+
   // Listen for swap operations
   document.addEventListener('swapOperation', (e) => {
     const { proceso, toSwap } = e.detail;
@@ -718,7 +718,7 @@ function injectEnhancedCSS() {
       border: 2px solid #ffffff;
     }
   `;
-  
+
   const styleSheet = document.createElement('style');
   styleSheet.textContent = css;
   document.head.appendChild(styleSheet);
@@ -776,7 +776,7 @@ function calculateMemoryStats() {
   const free = freeBlocks.reduce((sum, b) => sum + b.tamaño, 0);
   const used = total - free;
   const fragmentation = ((freeBlocks.length - 1) / memoria.bloques.length * 100).toFixed(1);
-  
+
   return { total, used, free, fragmentation };
 }
 
@@ -790,7 +790,8 @@ function updateSimulationSpeed(speed) {
 function updateSpeedButtonStates(currentSpeed) {
   const speedBtns = document.querySelectorAll('.speed-btn');
   speedBtns.forEach(btn => {
-    btn.classList.toggle('active', parseFloat(btn.dataset.speed) === currentSpeed);
+    const isActive = Math.abs(parseFloat(btn.dataset.speed) - currentSpeed) < 0.01;
+    btn.classList.toggle('active', isActive);
   });
 }
 
@@ -801,7 +802,7 @@ function exportConfiguration() {
     algorithm: window.simulator.algoritmo || 'SJF',
     quantum: window.simulator.quantum || 5
   };
-  
+
   const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -817,7 +818,7 @@ function exportSimulationResults() {
     processes: window.simulator.procesos || [],
     timestamp: new Date().toISOString()
   };
-  
+
   const blob = new Blob([JSON.stringify(results, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -830,7 +831,7 @@ function exportSimulationResults() {
 function handleConfigImport(event) {
   const file = event.target.files[0];
   if (!file) return;
-  
+
   const reader = new FileReader();
   reader.onload = (e) => {
     try {
@@ -845,6 +846,7 @@ function handleConfigImport(event) {
 }
 
 function resetSimulation() {
+  cleanupIntervals();
   // Reset all simulation state
   if (window.simulator) {
     window.simulator.procesos = [];
@@ -852,10 +854,12 @@ function resetSimulation() {
     window.simulator.planificador = null;
     console.log('Simulation reset');
   }
+
 }
 
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('preferred-theme', theme); // Si está disponible
   console.log(`Applied theme: ${theme}`);
 }
 
@@ -867,7 +871,7 @@ function toggleAnimations(enabled) {
       window.simulator.animationManager.disableAnimations();
     }
   }
-  
+
   // Toggle CSS animation classes
   const body = document.body;
   if (enabled) {
@@ -875,7 +879,7 @@ function toggleAnimations(enabled) {
   } else {
     body.classList.add('no-animations');
   }
-  
+
   console.log(`Animations ${enabled ? 'enabled' : 'disabled'}`);
 }
 
@@ -883,7 +887,7 @@ function onSimulationStart() {
   console.log('Simulation started');
   updateMemoryDisplay();
   showNotification('Simulación iniciada', 'success');
-  
+
   // Enable real-time updates
   startRealTimeUpdates();
 }
@@ -891,7 +895,7 @@ function onSimulationStart() {
 function onSimulationPause() {
   console.log('Simulation paused');
   showNotification('Simulación pausada', 'warning');
-  
+
   // Pause real-time updates
   pauseRealTimeUpdates();
 }
@@ -899,10 +903,10 @@ function onSimulationPause() {
 function onSimulationStop() {
   console.log('Simulation stopped');
   showNotification('Simulación detenida', 'info');
-  
+
   // Stop real-time updates
   stopRealTimeUpdates();
-  
+
   // Reset visual states
   resetVisualStates();
 }
@@ -914,7 +918,7 @@ function startRealTimeUpdates() {
   if (window.simulator.updateInterval) {
     clearInterval(window.simulator.updateInterval);
   }
-  
+
   window.simulator.updateInterval = setInterval(() => {
     updateMemoryDisplay();
     updateMemoryStats();
@@ -943,8 +947,13 @@ function stopRealTimeUpdates() {
  * Update memory display with current state
  */
 function updateMemoryDisplay() {
-  if (window.simulator.memoria && window.drawMemory) {
-    window.drawMemory(window.simulator.memoria);
+  try {
+    if (window.simulator.memoria && window.drawMemory) {
+      window.drawMemory(window.simulator.memoria);
+    }
+  } catch (error) {
+    console.error('Error updating memory display:', error);
+    showNotification('Error actualizando visualización', 'error');
   }
 }
 
@@ -954,7 +963,7 @@ function updateMemoryDisplay() {
 function updateMemoryStats() {
   const freeMemoryEl = document.getElementById('free-memory');
   const fragmentationEl = document.getElementById('fragmentation');
-  
+
   if (window.simulator.memoria && freeMemoryEl && fragmentationEl) {
     const stats = calculateMemoryStats();
     freeMemoryEl.textContent = `${stats.free}KB`;
@@ -967,14 +976,14 @@ function updateMemoryStats() {
  */
 function updateProcessStates() {
   const processes = window.simulator.procesos || [];
-  
+
   processes.forEach(proceso => {
     // Update process visual states based on current status
     const processElement = document.querySelector(`[data-process-id="${proceso.id}"]`);
     if (processElement) {
       // Remove all state classes
       processElement.classList.remove('estado-nuevo', 'estado-listo', 'estado-ejecutando', 'estado-terminado', 'estado-swapped');
-      
+
       // Add current state class
       const stateClass = `estado-${proceso.estado.toLowerCase().replace(' ', '-')}`;
       processElement.classList.add(stateClass);
@@ -992,7 +1001,7 @@ function resetVisualStates() {
     el.classList.remove('estado-nuevo', 'estado-listo', 'estado-ejecutando', 'estado-terminado', 'estado-swapped');
     el.classList.remove('state-transition', 'swapping-out', 'recovering-from-swap');
   });
-  
+
   // Clear memory display
   const canvas = document.getElementById('canvas');
   if (canvas) {
@@ -1008,9 +1017,9 @@ function showNotification(message, type = 'info', duration = 3000) {
   const notification = document.createElement('div');
   notification.className = `notification ${type}`;
   notification.textContent = message;
-  
+
   document.body.appendChild(notification);
-  
+
   // Auto-remove notification
   setTimeout(() => {
     notification.style.opacity = '0';
@@ -1076,19 +1085,19 @@ function createAdvancedProcessDialog() {
       </form>
     </div>
   `;
-  
+
   document.body.appendChild(dialog);
-  
+
   // Setup form handler
   const form = document.getElementById('advanced-process-form');
   form.addEventListener('submit', handleAdvancedProcessCreation);
-  
+
   return dialog;
 }
 
 function handleAdvancedProcessCreation(event) {
   event.preventDefault();
-  
+
   const formData = new FormData(event.target);
   const processData = {
     nombre: formData.get('process-name') || `Proceso-${Date.now()}`,
@@ -1098,7 +1107,7 @@ function handleAdvancedProcessCreation(event) {
     tiempoLlegada: parseInt(formData.get('process-arrival')) || 0,
     ioIntensive: formData.has('process-io-intensive')
   };
-  
+
   // Create and add process to simulator
   if (window.simulator && window.simulator.addProcess) {
     const newProcess = window.simulator.addProcess(processData);
@@ -1107,7 +1116,7 @@ function handleAdvancedProcessCreation(event) {
     console.log('Created process data:', processData);
     showNotification('Proceso creado (modo demo)', 'info');
   }
-  
+
   closeModal();
 }
 
@@ -1126,15 +1135,15 @@ function performAdvancedDefragmentation() {
     showNotification('No hay memoria para desfragmentar', 'warning');
     return;
   }
-  
+
   console.log('Starting advanced defragmentation...');
   showNotification('Iniciando desfragmentación avanzada...', 'info');
-  
+
   // Animate defragmentation process
   const blocks = window.simulator.memoria.bloques;
   let step = 0;
   const totalSteps = blocks.length;
-  
+
   const defragStep = () => {
     if (step < totalSteps) {
       // Visual feedback for defragmentation progress
@@ -1147,7 +1156,7 @@ function performAdvancedDefragmentation() {
       updateMemoryStats();
     }
   };
-  
+
   defragStep();
 }
 
@@ -1158,7 +1167,7 @@ function startPerformanceMonitoring() {
   if (window.simulator.performanceMonitor) {
     clearInterval(window.simulator.performanceMonitor);
   }
-  
+
   window.simulator.performanceData = {
     cpuUtilization: [],
     memoryUtilization: [],
@@ -1166,7 +1175,7 @@ function startPerformanceMonitoring() {
     contextSwitches: 0,
     timestamps: []
   };
-  
+
   window.simulator.performanceMonitor = setInterval(() => {
     collectPerformanceMetrics();
   }, 1000);
@@ -1175,30 +1184,30 @@ function startPerformanceMonitoring() {
 function collectPerformanceMetrics() {
   const now = new Date();
   const simulator = window.simulator;
-  
+
   if (!simulator.performanceData) return;
-  
+
   // Calculate CPU utilization
   const runningProcesses = (simulator.procesos || []).filter(p => p.estado === 'Ejecutando').length;
   const totalProcesses = (simulator.procesos || []).length;
   const cpuUtil = totalProcesses > 0 ? (runningProcesses / totalProcesses) * 100 : 0;
-  
+
   // Calculate memory utilization
   let memoryUtil = 0;
   if (simulator.memoria) {
     const stats = calculateMemoryStats();
     memoryUtil = (stats.used / stats.total) * 100;
   }
-  
+
   // Calculate swap activity
   const swapProcesses = (simulator.memoria?.swap || []).length;
-  
+
   // Store metrics
   simulator.performanceData.cpuUtilization.push(cpuUtil);
   simulator.performanceData.memoryUtilization.push(memoryUtil);
   simulator.performanceData.swapActivity.push(swapProcesses);
   simulator.performanceData.timestamps.push(now);
-  
+
   // Keep only last 60 data points (1 minute)
   const maxPoints = 60;
   if (simulator.performanceData.timestamps.length > maxPoints) {
@@ -1291,7 +1300,7 @@ function injectModalCSS() {
       transition: none !important;
     }
   `;
-  
+
   const styleSheet = document.createElement('style');
   styleSheet.textContent = modalCSS;
   document.head.appendChild(styleSheet);
@@ -1305,6 +1314,15 @@ function showAddProcessDialog() {
   createAdvancedProcessDialog();
 }
 
+function cleanupIntervals() {
+  if (window.simulator.updateInterval) {
+    clearInterval(window.simulator.updateInterval);
+  }
+  if (window.simulator.performanceMonitor) {
+    clearInterval(window.simulator.performanceMonitor);
+  }
+}
+
 /**
  * Initialize keyboard shortcuts
  */
@@ -1314,7 +1332,7 @@ function initializeKeyboardShortcuts() {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
       return;
     }
-    
+
     // Ctrl/Cmd + key combinations
     if (e.ctrlKey || e.metaKey) {
       switch (e.key.toLowerCase()) {
@@ -1342,20 +1360,20 @@ function initializeKeyboardShortcuts() {
           break;
       }
     }
-    
+
     // Escape key to close modals
     if (e.key === 'Escape') {
       closeModal();
     }
   });
-  
+
   console.log('Keyboard shortcuts initialized');
   showNotification('Atajos de teclado activos: Ctrl+S (start), Ctrl+P (pause), Ctrl+R (reset), Ctrl+E (export), Ctrl+N (new process)', 'info', 5000);
 }
 
 // Add keyboard shortcuts initialization to the main init function
 const originalInitialize = window.initializeEnhancedSystem || initializeEnhancedSystem;
-window.initializeEnhancedSystem = function() {
+window.initializeEnhancedSystem = function () {
   originalInitialize();
   initializeKeyboardShortcuts();
 };
