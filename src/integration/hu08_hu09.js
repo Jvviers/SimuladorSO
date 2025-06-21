@@ -6,7 +6,7 @@ import { Planificador } from '../core/process.js'; // Fixed import path
  * HU08 & HU09 Integration
  * Integrates swapping functionality with visual animations
  */
-export class SwapAnimationIntegrator {
+export class swapAnimationIntegrator {
   constructor() {
     this.animationManager = null;
     this.isInitialized = false;
@@ -569,8 +569,9 @@ export class SwapAnimationIntegrator {
 }
 
 // Create global instance and expose recovery function
-const integrator = new SwapAnimationIntegrator();
+const integrator = new swapAnimationIntegrator();
 window.swapIntegrator = integrator;
 
 // Export for module use
+export { swapAnimationIntegrator, integrator };
 export default integrator;

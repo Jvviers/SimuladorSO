@@ -1,4 +1,44 @@
-import { Estado } from './process.js';
+// src/core/process.js
+
+// Define Estado enum here
+export const Estado = {
+  NUEVO: 'NUEVO',
+  LISTO: 'LISTO',
+  EJECUTANDO: 'EJECUTANDO',
+  TERMINADO: 'TERMINADO',
+  SWAPPED: 'SWAPPED'
+};
+
+export class Proceso {
+  constructor(id, nombre, llegada, burst, memoria) {
+    this.id         = id;
+    this.nombre     = nombre;
+    this.llegada    = llegada;
+    this.burst      = burst;
+    this.memoria    = memoria;
+    this.estado     = Estado.NUEVO;
+    this.restante   = burst;
+    this.tEspera    = 0;
+    this.tRespuesta = null;
+    this.tRetorno   = null;
+    this.bloque     = null;
+  }
+
+  tick(tActual) {
+    if (this.estado === Estado.EJECUTANDO) {
+      if (this.tRespuesta === null) {
+        this.tRespuesta = tActual - this.llegada;
+      }
+      this.restante--;
+      if (this.restante <= 0) {
+        this.estado = Estado.TERMINADO;
+        this.tRetorno = tActual - this.llegada + 1;
+      }
+    } else if (this.estado === Estado.LISTO) {
+      this.tEspera++;
+    }
+  }
+}
 
 export class Planificador {
   constructor(procesos, memoria, algoritmo = 'SJF', quantum = null) {
