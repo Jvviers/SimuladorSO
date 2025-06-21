@@ -1,6 +1,40 @@
 import { AnimationManager } from '../renderer/animation.js';
 import { SwapAnimationIntegrator } from '../integration/hu08_hu09.js';
 
+import { Proceso } from '../core/process.js';
+import memoria from '../core/memory.js';
+import scheduler from '../core/scheduler.js';
+
+
+if (!window.simulator) window.simulator = {};
+
+window.simulator.procesos = [];
+window.simulator.memoria = memoria;
+window.simulator.planificador = scheduler;
+window.simulator.algoritmo = 'SJF';
+window.simulator.quantum = 5;
+
+window.simulator.addProcess = function (data) {
+  const nuevo = new Proceso({
+    nombre: data.nombre,
+    llegada: data.tiempoLlegada,
+    burst: data.tiempoCPU,
+    memoria: data.memoria,
+    prioridad: data.prioridad || 3
+  });
+
+  this.procesos.push(nuevo);
+  this.planificador.add(nuevo);
+
+  const asignado = this.memoria.asignar(nuevo);
+  if (!asignado) {
+    this.memoria.enviarASwap(nuevo);
+  }
+
+  document.dispatchEvent(new CustomEvent('memoryUpdated'));
+  return nuevo;
+};
+
 /**
  * Initialize the complete animation and swap system
  * Call this function when the DOM is loaded and simulator is ready
@@ -14,7 +48,7 @@ export function initializeEnhancedSystem() {
   setupEnhancedMemoryRendering();
   setupEnhancedControls();
   setupSimulationEventListeners();
-  injectEnhancedCSS();s
+  injectEnhancedCSS(); s
   console.log('✅ Enhanced system initialized successfully');
 }
 
