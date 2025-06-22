@@ -1,29 +1,25 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname  = path.dirname(__filename);
+const __dirname = dirname(__filename);
 
-function createWindow() {
+function createWindow () {
   const win = new BrowserWindow({
-    width: 1000,
-    height: 700,
+    width: 1200,
+    height: 800,
     webPreferences: {
-      // permitimos require/import en el renderer
-      nodeIntegration: true,
-      contextIsolation: false,
-      // preload si lo necesitas:
       preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false
     }
   });
+  
 
-  win.loadFile(path.join(__dirname, '..', 'public', 'index.html'));
+  win.loadFile('index.html');
   win.webContents.openDevTools();
 }
 
 app.whenReady().then(createWindow);
-
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
-});
